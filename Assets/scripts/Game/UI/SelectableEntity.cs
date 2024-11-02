@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+
 public class SelectableEntity : MonoBehaviour
 {
     public int health;
@@ -8,14 +9,21 @@ public class SelectableEntity : MonoBehaviour
     public bool OpenCraftMenu = false;
     private bool selected = false;
     private Renderer[] childRenderers;
-    private Material normalMaterial;
+    private Material[] normalMaterials; // Array to store original materials
     public Material selectedMaterial;
 
     private void Start()
     {
         childRenderers = GetComponentsInChildren<Renderer>();
-        normalMaterial = GetComponent<Renderer>().material;
+        normalMaterials = new Material[childRenderers.Length];
+
+        // Store the original material for each child renderer
+        for (int i = 0; i < childRenderers.Length; i++)
+        {
+            normalMaterials[i] = childRenderers[i].material;
+        }
     }
+
     private void Update()
     {
         if (!EventSystem.current.IsPointerOverGameObject())
@@ -39,38 +47,35 @@ public class SelectableEntity : MonoBehaviour
                         {
                             FindObjectOfType<GameController>().OpenCraftMenu();
                         }
-
                     }
                     else if (selected)
                     {
-                        FindObjectOfType<GameController>().DeselectEntity();
-                        selected = false;
-                        if (OpenCraftMenu)
-                        {
-                            FindObjectOfType<GameController>().CloseCraftMenu();
-                        }
-                        foreach (Renderer renderer in childRenderers)
-                        {
-                            renderer.material = normalMaterial;
-                        }
+                        DeselectEntity();
                     }
                 }
             }
+
             if (Input.GetMouseButtonDown(1)) // Right-click
             {
-                FindObjectOfType<GameController>().DeselectEntity();
-                selected = false;
-                if (OpenCraftMenu)
-                {
-                    FindObjectOfType<GameController>().CloseCraftMenu();
-                }
-                foreach (Renderer renderer in childRenderers)
-                {
-                    renderer.material = normalMaterial;
-                }
+                DeselectEntity();
             }
         }
-
     }
 
+    private void DeselectEntity()
+    {
+        FindObjectOfType<GameController>().DeselectEntity();
+        selected = false;
+
+        if (OpenCraftMenu)
+        {
+            FindObjectOfType<GameController>().CloseCraftMenu();
+        }
+
+        // Restore each renderer to its original material
+        for (int i = 0; i < childRenderers.Length; i++)
+        {
+            childRenderers[i].material = normalMaterials[i];
+        }
+    }
 }
